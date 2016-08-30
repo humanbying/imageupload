@@ -1,15 +1,32 @@
-const mongoose = require('mongoose');
+const express = require('express');
+const fs = require('fs');
+const multer = require('multer');
+const path = require('path');
 
-const imageSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  url: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
+const Image = require('../models/image');
+
+// const upload = multer({ dest: 'uploads' });
+const upload = multer({ storage: multer.memoryStorage() });
+
+const router = express.Router();
+
+//  /api/images
+
+router.get('/', (req, res) => {
+  Image.find({}, (err, images) => {
+    res.status(err ? 400 : 200).send(err || images);
+  });
 });
 
-imageSchema.statics.upload = function(fileObj, cb) {
+router.post('/', upload.single('image'), (req, res) => {
+  Image.upload(req.file, (err, image) => {
+    // 1. Upload data to S3
+    // 2. Determine the url of the image on S3
+    // 3. Save image doc in db, with url (and original name)
+    // 4. Callback with saved image doc
 
-};
+    res.status(err ? 400 : 200).send(err || image);
+  });
+});
 
-const Image = mongoose.model('Image', imageSchema);
-
-module.exports = Image;
+module.exports = router;
